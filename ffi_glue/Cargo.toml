@@ -1,9 +1,6 @@
 [package]
-name = "guitk"
+name = "ffi_glue"
 version = "0.1.0"
 authors = ["Thomas Cheng <thomascheng1998@googlemail.com>"]
 
 [dependencies]
-android_glue = "0.2.1"
-ffi_glue = {path = "ffi_glue"}
-libc = "*"

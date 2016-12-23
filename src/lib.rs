@@ -1,3 +1,9 @@
+extern crate android_glue;
+extern crate ffi_glue;
+extern crate libc;
+
+pub mod logger;
+
 #[cfg(test)]
 mod tests {
     #[test]
