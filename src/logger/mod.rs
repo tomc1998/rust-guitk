@@ -1,13 +1,6 @@
-//use android_glue;
 use std::ffi::CString;
 use libc::{c_int, c_char};
 use ffi_glue::ffi;
-
-extern { 
-  pub fn __android_log_write(prio: c_int, 
-                             tag: *const c_char, 
-                             text: *const c_char) -> c_int; 
-}
 
 pub enum LogPriority {
   DEBUG,
