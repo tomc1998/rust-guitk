@@ -1,0 +1,73 @@
+use glium;
+use glium::Surface;
+
+use view::View;
+use LibState;
+
+#[derive(Copy, Clone)]
+struct Vertex {
+  position: [f32; 2],
+  color: [f32; 4],
+}
+implement_vertex!(Vertex, position, color);
+
+pub struct Renderer {
+  program: glium::Program,
+}
+
+impl Renderer {
+  pub fn new(lib_state: &LibState) -> Renderer {
+    // Vertex shader
+    let vert_src = r#"
+      #version 100
+      attribute vec2 position;
+      attribute vec4 color;
+
+      varying vec4 v_color;
+
+      void main() {
+          v_color = color;
+          gl_Position = vec4(position, 0.0, 1.0);
+      }
+    "#;
+
+    // Fragment shader
+    let frag_src = r#"
+      #version 100
+      precision mediump float; // Float precision to medium
+
+      varying vec4 v_color;
+
+      void main() {
+        gl_FragColor = v_color;
+      }
+    "#;
+
+    Renderer { 
+      program: glium::Program::from_source(&lib_state.display,
+                                           vert_src, 
+                                           frag_src, 
+                                           None).unwrap(),
+    }
+  }
+
+  pub fn render(&self, lib_state: &LibState, view : &View) {
+    // Create VBO data inside vec
+    let data = vec![
+      Vertex{ position : [-0.5, -0.5], color: [1.0, 0.0, 0.0, 1.0]}, 
+      Vertex{ position : [ 0.5, -0.5], color: [0.0, 1.0, 0.0, 1.0]}, 
+      Vertex{ position : [ 0.5,  0.5], color: [0.0, 0.0, 1.0, 1.0]}, 
+      Vertex{ position : [-0.5, -0.5], color: [0.0, 0.0, 1.0, 1.0]}, 
+      Vertex{ position : [-0.5,  0.5], color: [0.0, 0.0, 1.0, 1.0]}, 
+      Vertex{ position : [ 0.5,  0.5], color: [0.0, 0.0, 1.0, 1.0]}, 
+    ];
+    let vbo = glium::VertexBuffer::new(&lib_state.display, &data).unwrap();
+    let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
+    let mut target = lib_state.display.draw();
+    target.draw(&vbo, 
+                indices, &self.program,
+                &glium::uniforms::EmptyUniforms, 
+                &Default::default()).unwrap();
+    let _ = target.finish().unwrap();
+  }
+}

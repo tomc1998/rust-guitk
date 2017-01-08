@@ -1,5 +1,4 @@
 use std::ffi::CString;
-use libc::{c_int, c_char};
 use ffi_glue::ffi;
 
 pub enum LogPriority {
