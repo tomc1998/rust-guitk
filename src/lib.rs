@@ -4,16 +4,25 @@ extern crate libc;
 #[macro_use]
 extern crate glium;
 
+/// Logger module. Uses android glue to write messages to logcat.
 pub mod logger;
+
+/// Renderer module, contains methods called by the guitk lib to render
+/// entities to the screen.
 pub mod renderer;
+
+/// View module, defines structures to represent a 'view', a collection of
+/// entities which are grouped and presented as a single screen on the device.
 pub mod view;
+
+/// Contains common structs and functions.
 pub mod common;
+
+/// Contains definitions for the EntityID type and types of components.
 pub mod entity;
 
-pub fn add(a: i32, b: i32) -> i32 {
-  a * b
-}
-
+/// A module which defines ways in which to layout entities.
+pub mod layout;
 
 /// A struct which contains all the state needed by the library to function -
 /// i.e a reference to the glutin Facade created for event handling and

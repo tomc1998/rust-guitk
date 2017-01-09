@@ -52,15 +52,37 @@ impl Renderer {
   }
 
   pub fn render(&self, lib_state: &LibState, view : &View) {
+    use logger;
     // Create VBO data inside vec
-    let data = vec![
-      Vertex{ position : [-0.5, -0.5], color: [1.0, 0.0, 0.0, 1.0]}, 
-      Vertex{ position : [ 0.5, -0.5], color: [0.0, 1.0, 0.0, 1.0]}, 
-      Vertex{ position : [ 0.5,  0.5], color: [0.0, 0.0, 1.0, 1.0]}, 
-      Vertex{ position : [-0.5, -0.5], color: [0.0, 0.0, 1.0, 1.0]}, 
-      Vertex{ position : [-0.5,  0.5], color: [0.0, 0.0, 1.0, 1.0]}, 
-      Vertex{ position : [ 0.5,  0.5], color: [0.0, 0.0, 1.0, 1.0]}, 
-    ];
+    let mut data = Vec::<Vertex>::with_capacity(
+      view.component_debug_draw.len()*6);
+    // Loop through debug draw components, find matching AABB component, then
+    // draw
+    for dd in &view.component_debug_draw {
+      let aabb = view.component_aabb.get_component(dd.entity_id);
+      if aabb.is_none() { continue; }
+      // Found a matching AABB component, we can draw!
+      let aabb = aabb.unwrap();
+      data.push(Vertex{
+        position: [aabb.x, aabb.y], 
+        color: [dd.color.r, dd.color.g, dd.color.b, 0.5]});
+      data.push(Vertex{
+        position: [aabb.x+aabb.w, aabb.y], 
+        color: [dd.color.r, dd.color.g, dd.color.b, 0.5]});
+      data.push(Vertex{
+        position: [aabb.x+aabb.w, aabb.y+aabb.h], 
+        color: [dd.color.r, dd.color.g, dd.color.b, 0.5]});
+      data.push(Vertex{
+        position: [aabb.x, aabb.y], 
+        color: [dd.color.r, dd.color.g, dd.color.b, 0.5]});
+      data.push(Vertex{
+        position: [aabb.x, aabb.y+aabb.h], 
+        color: [dd.color.r, dd.color.g, dd.color.b, 0.5]});
+      data.push(Vertex{
+        position: [aabb.x+aabb.w, aabb.y+aabb.h], 
+        color: [dd.color.r, dd.color.g, dd.color.b, 0.5]});
+    }
+
     let vbo = glium::VertexBuffer::new(&lib_state.display, &data).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
     let mut target = lib_state.display.draw();
