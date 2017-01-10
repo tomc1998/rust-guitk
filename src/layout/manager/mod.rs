@@ -9,7 +9,7 @@ mod entity_tree;
 /// Layout a view.
 pub fn layout(view : &mut View) {
   // Check that the hierarchy is not malformed
-  let tree = entity_tree::is_hierarchy_malformed(view);
+  let tree = entity_tree::EntityTree::new_from_view(view);
   if tree.is_none() {
     logger::log_default("View is malformed");
     return;
