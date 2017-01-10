@@ -52,7 +52,6 @@ impl Renderer {
   }
 
   pub fn render(&self, lib_state: &LibState, view : &View) {
-    use logger;
     // Create VBO data inside vec
     let mut data = Vec::<Vertex>::with_capacity(
       view.component_debug_draw.len()*6);

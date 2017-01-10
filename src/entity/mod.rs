@@ -5,6 +5,7 @@
 use std::ops::AddAssign;
 use std::cmp::PartialEq;
 use layout::Layout;
+use view::View;
 
 pub mod core;
 
@@ -23,16 +24,31 @@ impl PartialEq for EntityID {
   }
 }
 
-pub trait Component {
-  fn get_entity_id(&self) -> EntityID;
-}
-
 impl EntityID {
   /// Sets the layout of this entity. Any current layout (and subsequently,
   /// children) is/are erased.
-  /// @param layout The layout to use.
-  pub fn set_layout(layout: Layout) {
+  pub fn set_layout(&self, view: &mut View, layout: Layout) {
     // Find this entity's layout (if it exists)
+    let comp_container_list = &mut view.component_container;
+    {
+      // Check if it exists
+      let comp_container = comp_container_list.get_component_mut(*self);
+      if comp_container.is_some() { // Already exists, just change it
+        comp_container.unwrap().layout = layout;
+        return;
+      }
+    }
+    // Doesn't exist...
+    // Need to create a new container component, then add it
+    comp_container_list.add_component(
+      core::ComponentContainer {
+        entity_id: *self,
+        layout: layout,
+      });
   }
+}
+
+pub trait Component {
+  fn get_entity_id(&self) -> EntityID;
 }
 

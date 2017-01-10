@@ -1,7 +1,16 @@
+/// Layout manager module. Handles dynamically resizing entities based on the
+/// child / parent hierarchy, and layout rules defined by the container's
+/// 'Layout'.
+pub mod manager;
+
 use entity::EntityID;
 
-/// Enum which lists different types of layouts. The layouts contain data
-/// on where entity IDs will go.
+/// Enum which lists different types of layouts. The layout variants contain
+/// data about the child entity IDs and where the entities are positioned in
+/// the layout. 
+/// In order for an entity to be a child or parent, it must have
+/// an AABB component. Any parent / child not conforming to this will not be
+/// layed out.
 pub enum Layout {
   /// Header bar layout. Layout specified a header bar at the top, at a certain
   /// given height.
