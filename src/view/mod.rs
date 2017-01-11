@@ -34,6 +34,6 @@ impl<'a> View<'a> {
   /// Container component hierarchies. If the hierarchy is malforms (component
   /// with multiple parents / circular hierarchy) then this thread will panic.
   pub fn layout(&mut self) {
-    manager::layout(self);
+    manager::layout_view(self);
   }
 }

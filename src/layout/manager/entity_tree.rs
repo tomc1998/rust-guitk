@@ -48,6 +48,26 @@ impl EntityTree {
     return Some(tree);
   }
 
+  /// Function to get a list of the root nodes in this tree. 
+  /// # Returns
+  /// A list of indexes into the tree.
+  pub fn get_roots(&self) -> Vec<usize> {
+    let mut roots = Vec::<usize>::new();
+    'outer: for ii in 0..self.len() {
+      for jj in 0..self.len() {
+        if ii == jj { continue; }
+        let children = &self[jj].children;
+        for child in children {
+          if *child == ii {
+            continue 'outer;
+          }
+        }
+      }
+      roots.push(ii);
+    }
+    return roots;
+  }
+
   /// Function takes a node and a list of remaining candidates for children,
   /// and recursively adds them to the tree, setting the children's value to
   /// None in the given vector once complete.
@@ -112,7 +132,7 @@ impl IndexMut<usize> for EntityTree {
 impl<'a> IntoIterator for &'a EntityTree {
   type Item = &'a EntityTreeNode;
   type IntoIter = slice::Iter<'a, EntityTreeNode>;
-  pub fn into_iter(self) -> Self::IntoIter {
+  fn into_iter(self) -> Self::IntoIter {
     self.0.iter()
   }
 }

@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct RGBf32 {
   pub r: f32,
   pub g: f32,
@@ -14,6 +15,7 @@ impl RGBf32 {
   }
 }
 
+#[derive(Clone)]
 pub struct RGBAf32 {
   pub r: f32,
   pub g: f32,

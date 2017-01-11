@@ -2,7 +2,8 @@ use layout::Layout;
 use entity::{EntityID, Component};
 use common::color::RGBf32;
 
-/// Position component for entity. Defines a 2D relative view position and size.
+/// Position component for entity. Defines a 2D view position and size.
+#[derive(Clone)]
 pub struct ComponentAABB {
   pub entity_id: EntityID,
   pub x: f32,
@@ -17,6 +18,7 @@ impl Component for ComponentAABB {
 /// Draws a rectangle at this entity's position over everything else. 50% opacity.
 /// Dependencies: 
 /// ComponentAABB
+#[derive(Clone)]
 pub struct ComponentDebugDraw {
   pub entity_id: EntityID,
   pub color:    RGBf32,
@@ -26,6 +28,7 @@ impl Component for ComponentDebugDraw {
 }
 
 /// Container component. An entity with this will contain other entities.
+#[derive(Clone)]
 pub struct ComponentContainer {
   pub entity_id: EntityID,
   /// The layout of this container. A container can only be 1 layout at one time.

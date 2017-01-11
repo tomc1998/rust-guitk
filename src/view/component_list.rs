@@ -1,5 +1,6 @@
 use entity::{Component, EntityID};
 use std::slice;
+use std::ops::{Index, IndexMut};
 
 /// Struct to represent a list of components. Internally, components are stored
 /// in an ordered list (by entty ID) to allow binary searching.
@@ -123,5 +124,18 @@ impl<'a, T : Component> IntoIterator for &'a ComponentList<T> {
     self.list.iter()
   }
 }
+
+impl<T : Component> Index<usize> for ComponentList<T> {
+  type Output = T;
+  fn index(&self, index: usize) -> &T {
+    &self.list[index]
+  }
+}
+impl<T : Component> IndexMut<usize> for ComponentList<T> {
+  fn index_mut(&mut self, index: usize) -> &mut T {
+    &mut self.list[index]
+  }
+}
+
 
 
