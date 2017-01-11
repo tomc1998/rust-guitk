@@ -1,5 +1,6 @@
 use glium;
 use glium::Surface;
+use glium::uniforms::{UniformsStorage, EmptyUniforms};
 
 use view::View;
 use LibState;
@@ -11,12 +12,15 @@ struct Vertex {
 }
 implement_vertex!(Vertex, position, color);
 
-pub struct Renderer {
+pub struct Renderer<'a> {
   program: glium::Program,
+  uniforms: UniformsStorage<'a, [[f32; 4]; 4], EmptyUniforms>,
+  view_w: u32,
+  view_h: u32,
 }
 
-impl Renderer {
-  pub fn new(lib_state: &LibState) -> Renderer {
+impl<'a> Renderer<'a> {
+  pub fn new(lib_state: &LibState, w: u32, h: u32) -> Renderer<'a> {
     // Vertex shader
     let vert_src = r#"
       #version 100
@@ -25,9 +29,11 @@ impl Renderer {
 
       varying vec4 v_color;
 
+      uniform mat4 proj_mat;
+
       void main() {
           v_color = color;
-          gl_Position = vec4(position, 0.0, 1.0);
+          gl_Position = proj_mat * vec4(position, 0.0, 1.0);
       }
     "#;
 
@@ -43,7 +49,18 @@ impl Renderer {
       }
     "#;
 
+    let uniforms = UniformsStorage::new(
+      "proj_mat",
+      // Orthographic proj mat:
+      // glOrtho(0, w, h, 0, -1, 1);
+      [[2.0/w as f32, 0.0,           0.0, -0.0],
+       [0.0,         -2.0/h as f32,  0.0,  0.0],
+       [0.0,          0.0,          -1.0,  0.0],
+       [-1.0,          1.0,           0.0,  1.0]]);
+
     Renderer { 
+      uniforms: uniforms,
+      view_w: w, view_h: h,
       program: glium::Program::from_source(&lib_state.display,
                                            vert_src, 
                                            frag_src, 
@@ -87,8 +104,12 @@ impl Renderer {
     let mut target = lib_state.display.draw();
     target.draw(&vbo, 
                 indices, &self.program,
-                &glium::uniforms::EmptyUniforms, 
+                &self.uniforms,
                 &Default::default()).unwrap();
     let _ = target.finish().unwrap();
+  }
+
+  pub fn get_view_size(&self) -> (u32, u32) {
+    (self.view_w, self.view_h)
   }
 }
