@@ -1,16 +1,16 @@
-use view::View;
+use view::Layer;
 use entity::core::{ComponentContainer};
 use layout::Layout;
 
-pub fn layout(view: &mut View, component: &ComponentContainer) {
+pub fn layout(layer: &mut Layer, component: &ComponentContainer) {
   match component.layout {
     Layout::HeaderBar {entity_header, entity_body, header_height} => {
       // Find this component's AABB
-      let view_component_aabb = &mut view.component_aabb;
+      let layer_component_aabb = &mut layer.component_aabb;
       let (c_x, c_y, c_w, c_h);
       {
         let c_aabb 
-          = view_component_aabb.get_component(component.entity_id);
+          = layer_component_aabb.get_component(component.entity_id);
         if c_aabb.is_none() { return; }
         let c_aabb = c_aabb.unwrap();
         c_x = c_aabb.x;
@@ -20,9 +20,9 @@ pub fn layout(view: &mut View, component: &ComponentContainer) {
       }
 
       {
-        // Find header bar entity ID, and find the AABB component in the view.
+        // Find header bar entity ID, and find the AABB component in the layer.
         let header_bar_id = entity_header;
-        let header_bar_aabb = view_component_aabb.get_component_mut(header_bar_id);
+        let header_bar_aabb = layer_component_aabb.get_component_mut(header_bar_id);
         if header_bar_aabb.is_none() { return; }
         let header_bar_aabb = header_bar_aabb.unwrap();
         // Set header AABB component values
@@ -35,7 +35,7 @@ pub fn layout(view: &mut View, component: &ComponentContainer) {
       {
         // Find the body entity ID, and the AABB component for it.
         let body_id = entity_body;
-        let body_aabb = view_component_aabb.get_component_mut(body_id);
+        let body_aabb = layer_component_aabb.get_component_mut(body_id);
         if body_aabb.is_none() { return; }
         let body_aabb = body_aabb.unwrap();
         // Set header AABB component values

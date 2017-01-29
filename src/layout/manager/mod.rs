@@ -1,4 +1,4 @@
-use view::View;
+use view::Layer;
 use entity::core::ComponentContainer;
 use layout::Layout;
 use logger;
@@ -11,10 +11,10 @@ mod entity_tree;
 mod header_bar;
 mod vsplit;
 
-/// Layout a view.
-pub fn layout_view(view : &mut View) {
+/// Layout a view layer.
+pub fn layout_layer(layer : &mut Layer) {
   // Check that the hierarchy is not malformed
-  let tree = entity_tree::EntityTree::new_from_view(view);
+  let tree = entity_tree::EntityTree::new_from_layer(layer);
   if tree.is_none() {
     logger::log_default("View is malformed");
     return;
@@ -36,11 +36,11 @@ pub fn layout_view(view : &mut View) {
       let component;
       {
         let component_opt
-          = view.component_container.get_component(tree[*node].value);
+          = layer.component_container.get_component(tree[*node].value);
         if component_opt.is_none() { continue; }
         component = component_opt.unwrap().clone();
       }
-      layout_component(view, component);
+      layout_component(layer, component);
       for child in &tree[*node].children {
         new_nodes.push(child);
       }
@@ -53,12 +53,12 @@ pub fn layout_view(view : &mut View) {
   }
 }
 
-fn layout_component(view: &mut View, component: ComponentContainer) {
+fn layout_component(layer: &mut Layer, component: ComponentContainer) {
   match component.layout {
     Layout::HeaderBar {entity_header:_, entity_body:_, header_height:_} => 
-      header_bar::layout(view, &component),
+      header_bar::layout(layer, &component),
     Layout::VSplit {entity_l:_, entity_r:_, split_pos:_} => 
-      vsplit::layout(view, &component),
+      vsplit::layout(layer, &component),
   }
 }
 

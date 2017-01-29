@@ -2,7 +2,7 @@ use glium;
 use glium::Surface;
 use glium::uniforms::{UniformsStorage, EmptyUniforms};
 
-use view::View;
+use view::Layer;
 use LibState;
 
 #[derive(Copy, Clone)]
@@ -68,14 +68,14 @@ impl<'a> Renderer<'a> {
     }
   }
 
-  pub fn render(&self, lib_state: &LibState, view : &View) {
+  pub fn render(&self, lib_state: &LibState, layer : &Layer) {
     // Create VBO data inside vec
     let mut data = Vec::<Vertex>::with_capacity(
-      view.component_debug_draw.len()*6);
+      layer.component_debug_draw.len()*6);
     // Loop through debug draw components, find matching AABB component, then
     // draw
-    for dd in &view.component_debug_draw {
-      let aabb = view.component_aabb.get_component(dd.entity_id);
+    for dd in &layer.component_debug_draw {
+      let aabb = layer.component_aabb.get_component(dd.entity_id);
       if aabb.is_none() { continue; }
       // Found a matching AABB component, we can draw!
       let aabb = aabb.unwrap();
