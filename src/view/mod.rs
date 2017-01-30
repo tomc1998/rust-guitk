@@ -1,6 +1,7 @@
 pub mod component_list;
 
 use entity::core::{ComponentContainer, ComponentAABB, ComponentDebugDraw};
+use entity::{Component, EntityID};
 use view::component_list::ComponentList;
 use layout::manager;
 
@@ -19,6 +20,21 @@ pub struct Layer {
   pub component_debug_draw : ComponentList<ComponentDebugDraw>,
   pub component_aabb : ComponentList<ComponentAABB>,
   pub component_container : ComponentList<ComponentContainer>,
+  pub component_layer : ComponentList<Layer>,
+  /// Optional entity ID association. If this layer has an AABB associated with
+  /// it (for GL scissor clipping), then this ID will be Some. Otherwise, None.
+  pub entity_id : Option<EntityID>,
+}
+
+impl Component for Layer {
+  fn get_entity_id(&self) -> EntityID {
+    if self.entity_id.is_none() {
+      EntityID(u16::max_value())
+    }
+    else {
+      self.entity_id.unwrap()
+    }
+  }
 }
 
 impl Layer {
@@ -27,6 +43,8 @@ impl Layer {
       component_debug_draw : ComponentList::new(),
       component_container : ComponentList::new(),
       component_aabb : ComponentList::new(),
+      component_layer: ComponentList::new(),
+      entity_id: None,
     }
   }
 }

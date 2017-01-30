@@ -22,10 +22,10 @@ pub fn layout_layer(layer : &mut Layer) {
   logger::log_default("View is not malformed.");
   let tree = tree.unwrap();
   logger::log_default(&format!("There are {} entities in the container tree.", 
-                              tree.len()));
+                               tree.len()));
   let roots = tree.get_roots();
   logger::log_default(&format!("There are {} root entities in the container tree.", 
-                              roots.len()));
+                               roots.len()));
   let mut node_queue = Vec::with_capacity(tree.len());
   let mut new_nodes = Vec::new();
   for root in roots {
@@ -51,14 +51,29 @@ pub fn layout_layer(layer : &mut Layer) {
     }
     new_nodes.clear();
   }
+
+  // Loop through nested layers, layout all of them
+  for l in &mut layer.component_layer {
+    if l.entity_id.is_none() { continue; }
+    let aabb = layer.component_aabb.get_component(l.entity_id.unwrap());
+    if aabb.is_none()  {
+      // Nested entity without AABB? Let's not support this for now, in case in
+      // the future we want to use the AABB to help with layout.
+      use logger;
+      logger::log("guitk", logger::LogPriority::ERROR, 
+                  "Nested layer with no AABB! Refusing to lay out!");
+      continue;
+    }
+    layout_layer(l);
+  }
 }
 
 fn layout_component(layer: &mut Layer, component: ComponentContainer) {
   match component.layout {
     Layout::HeaderBar {entity_header:_, entity_body:_, header_height:_} => 
       header_bar::layout(layer, &component),
-    Layout::VSplit {entity_l:_, entity_r:_, split_pos:_} => 
-      vsplit::layout(layer, &component),
+      Layout::VSplit {entity_l:_, entity_r:_, split_pos:_} => 
+        vsplit::layout(layer, &component),
   }
 }
 

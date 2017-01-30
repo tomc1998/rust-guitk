@@ -113,15 +113,29 @@ impl<T : Component> ComponentList<T> {
   pub fn len(&self) -> usize {
     self.list.len()
   }
+
+  pub fn push(&mut self, item: T) {
+    self.list.push(item)
+  }
 }
 
-/// Implement the IntoIterator for ComponentList, lets us iterate over the list
+/// Implement the IntoIterator for ComponentList ref, lets us iterate over the list
 /// of components.
 impl<'a, T : Component> IntoIterator for &'a ComponentList<T> {
   type Item = &'a T;
   type IntoIter = slice::Iter<'a, T>;
   fn into_iter(self) -> Self::IntoIter {
     self.list.iter()
+  }
+}
+
+/// Implement the IntoIterator for ComponentList mut ref, lets us iterate over
+/// the list of components.
+impl<'a, T : Component> IntoIterator for &'a mut ComponentList<T> {
+  type Item = &'a mut T;
+  type IntoIter = slice::IterMut<'a, T>;
+  fn into_iter(self) -> Self::IntoIter {
+    self.list.iter_mut()
   }
 }
 

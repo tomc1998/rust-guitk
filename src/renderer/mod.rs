@@ -68,7 +68,8 @@ impl<'a> Renderer<'a> {
     }
   }
 
-  pub fn render(&self, lib_state: &LibState, layer : &Layer) {
+  pub fn render(&self, lib_state: &LibState, target: &mut glium::Frame, 
+                layer : &Layer, scissor_rect: Option<glium::Rect>) {
     // Create VBO data inside vec
     let mut data = Vec::<Vertex>::with_capacity(
       layer.component_debug_draw.len()*6);
@@ -101,12 +102,30 @@ impl<'a> Renderer<'a> {
 
     let vbo = glium::VertexBuffer::new(&lib_state.display, &data).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
-    let mut target = lib_state.display.draw();
+
+    // Apply scissor to draw params
+    let mut draw_params = glium::draw_parameters::DrawParameters::default();
+    draw_params.scissor = scissor_rect;
+
     target.draw(&vbo, 
                 indices, &self.program,
                 &self.uniforms,
-                &Default::default()).unwrap();
-    let _ = target.finish().unwrap();
+                &draw_params).unwrap();
+
+    // Find nested layers and render them
+    for l in &layer.component_layer {
+      if l.entity_id.is_none() { continue; }
+      let aabb = layer.component_aabb.get_component(l.entity_id.unwrap());
+      if aabb.is_none() { continue; }
+      let aabb = aabb.unwrap();
+      // Render nested layer with the correct scissor params
+      self.render(lib_state, target, l, Some(glium::Rect {
+        left: aabb.x as u32,
+        bottom: aabb.x as u32,
+        width: aabb.w as u32,
+        height: aabb.h as u32,
+      }));
+    }
   }
 
   pub fn get_view_size(&self) -> (u32, u32) {

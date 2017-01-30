@@ -73,9 +73,11 @@ impl<'a> LibState<'a> {
     let view = self.view_stack.last();
     if view.is_some() {
       let view = view.unwrap();
+      let mut target = self.display.draw();
       for layer in &view.layers {
-        self.renderer.as_ref().unwrap().render(self, layer);
+        self.renderer.as_ref().unwrap().render(self, &mut target, layer, None);
       }
+      let _ = target.finish();
     }
   }
 
