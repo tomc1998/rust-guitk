@@ -24,15 +24,22 @@ pub mod entity;
 /// A module which defines ways in which to layout entities.
 pub mod layout;
 
+mod input;
+
 /// A struct which contains all the state needed by the library to function -
 /// i.e a reference to the glutin Facade created for event handling and
 /// rendering. 
 pub struct LibState<'a> {
   /// The glutin display. 
   display: glium::backend::glutin_backend::GlutinFacade,
+
   /// The renderer
   renderer: Option<renderer::Renderer<'a>>,
+
   pub view_stack: Vec<view::View<'a>>,
+
+  /// Input state, used by the input system to track fingers
+  input_state: input::InputState,
 }
 
 /// Initialise guitk. Creates an OpenGL context.
@@ -45,6 +52,7 @@ pub fn init<'a>() -> Option<LibState<'a>> {
       .build_glium().unwrap(),
     renderer: None,
     view_stack: Vec::new(),
+    input_state: input::InputState::new(),
   };
   // Get width / height of window
   {
@@ -68,8 +76,14 @@ pub fn init<'a>() -> Option<LibState<'a>> {
 }
 
 impl<'a> LibState<'a> {
+  /// Update the engine. Call this in your program loop.
+  pub fn update(&mut self) {
+    self.render();
+    input::process_input(self);
+  }
+
   /// Renders the view at the top of the view stack
-  pub fn render(&self) {
+  fn render(&self) {
     let view = self.view_stack.last();
     if view.is_some() {
       self.renderer.as_ref().unwrap().render(self, view.unwrap());
