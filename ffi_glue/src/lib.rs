@@ -532,7 +532,7 @@ pub unsafe fn get_native_window() -> ffi::NativeWindowType {
 pub fn write_log(message: &str) {
     let message = CString::new(message).unwrap();
     let message = message.as_ptr();
-    let tag = CString::new("RustAndroidGlueStdouterr").unwrap();
+    let tag = CString::new("guitk").unwrap();
     let tag = tag.as_ptr();
     unsafe { ffi::__android_log_write(3, tag, message) };
 }

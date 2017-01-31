@@ -1,6 +1,7 @@
 pub mod component_list;
 
 use entity::core::{ComponentContainer, ComponentAABB, ComponentDebugDraw};
+use entity::{Component, EntityID};
 use view::component_list::ComponentList;
 use layout::manager;
 
@@ -12,21 +13,54 @@ pub trait ViewListener {
   /// Called when the view is removed to the view stack
   fn on_hide(&self, view : &View);
 }
-/// Structure which contains the data for a view. It is essentially an ECS.
-pub struct View<'a> {
-  pub view_listeners : Vec<&'a ViewListener>,
+
+/// Structure which contains the data for a view. It is essentially an ECS, with clipping
+/// information.
+pub struct Layer {
   pub component_debug_draw : ComponentList<ComponentDebugDraw>,
   pub component_aabb : ComponentList<ComponentAABB>,
   pub component_container : ComponentList<ComponentContainer>,
+  pub component_layer : ComponentList<Layer>,
+  /// Optional entity ID association. If this layer has an AABB associated with
+  /// it (for GL scissor clipping), then this ID will be Some. Otherwise, None.
+  pub entity_id : Option<EntityID>,
+}
+
+impl Component for Layer {
+  fn get_entity_id(&self) -> EntityID {
+    if self.entity_id.is_none() {
+      EntityID(u16::max_value())
+    }
+    else {
+      self.entity_id.unwrap()
+    }
+  }
+}
+
+impl Layer {
+  pub fn new() -> Layer {
+    Layer {
+      component_debug_draw : ComponentList::new(),
+      component_container : ComponentList::new(),
+      component_aabb : ComponentList::new(),
+      component_layer: ComponentList::new(),
+      entity_id: None,
+    }
+  }
+}
+
+/// Structure which contains the data for a view. Contains a list of layers, and view listeners,
+/// which track events occuring to the view (hiding, showing etc).
+pub struct View<'a> {
+  pub view_listeners : Vec<&'a ViewListener>,
+  pub layers : Vec<Layer>,
 }
 
 impl<'a> View<'a> {
   pub fn new() -> View<'a> {
     View {
       view_listeners : Vec::new(),
-      component_debug_draw : ComponentList::new(),
-      component_container : ComponentList::new(),
-      component_aabb : ComponentList::new(),
+      layers: Vec::new(),
     }
   }
 
@@ -34,6 +68,8 @@ impl<'a> View<'a> {
   /// Container component hierarchies. If the hierarchy is malforms (component
   /// with multiple parents / circular hierarchy) then this thread will panic.
   pub fn layout(&mut self) {
-    manager::layout_view(self);
+    for layer in &mut self.layers {
+      manager::layout_layer(layer);
+    }
   }
 }

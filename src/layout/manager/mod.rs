@@ -1,4 +1,4 @@
-use view::View;
+use view::Layer;
 use entity::core::ComponentContainer;
 use layout::Layout;
 use logger;
@@ -11,10 +11,10 @@ mod entity_tree;
 mod header_bar;
 mod vsplit;
 
-/// Layout a view.
-pub fn layout_view(view : &mut View) {
+/// Layout a view layer.
+pub fn layout_layer(layer : &mut Layer) {
   // Check that the hierarchy is not malformed
-  let tree = entity_tree::EntityTree::new_from_view(view);
+  let tree = entity_tree::EntityTree::new_from_layer(layer);
   if tree.is_none() {
     logger::log_default("View is malformed");
     return;
@@ -22,10 +22,10 @@ pub fn layout_view(view : &mut View) {
   logger::log_default("View is not malformed.");
   let tree = tree.unwrap();
   logger::log_default(&format!("There are {} entities in the container tree.", 
-                              tree.len()));
+                               tree.len()));
   let roots = tree.get_roots();
   logger::log_default(&format!("There are {} root entities in the container tree.", 
-                              roots.len()));
+                               roots.len()));
   let mut node_queue = Vec::with_capacity(tree.len());
   let mut new_nodes = Vec::new();
   for root in roots {
@@ -36,11 +36,11 @@ pub fn layout_view(view : &mut View) {
       let component;
       {
         let component_opt
-          = view.component_container.get_component(tree[*node].value);
+          = layer.component_container.get_component(tree[*node].value);
         if component_opt.is_none() { continue; }
         component = component_opt.unwrap().clone();
       }
-      layout_component(view, component);
+      layout_component(layer, component);
       for child in &tree[*node].children {
         new_nodes.push(child);
       }
@@ -51,14 +51,29 @@ pub fn layout_view(view : &mut View) {
     }
     new_nodes.clear();
   }
+
+  // Loop through nested layers, layout all of them
+  for l in &mut layer.component_layer {
+    if l.entity_id.is_none() { continue; }
+    let aabb = layer.component_aabb.get_component(l.entity_id.unwrap());
+    if aabb.is_none()  {
+      // Nested entity without AABB? Let's not support this for now, in case in
+      // the future we want to use the AABB to help with layout.
+      use logger;
+      logger::log("guitk", logger::LogPriority::ERROR, 
+                  "Nested layer with no AABB! Refusing to lay out!");
+      continue;
+    }
+    layout_layer(l);
+  }
 }
 
-fn layout_component(view: &mut View, component: ComponentContainer) {
+fn layout_component(layer: &mut Layer, component: ComponentContainer) {
   match component.layout {
     Layout::HeaderBar {entity_header:_, entity_body:_, header_height:_} => 
-      header_bar::layout(view, &component),
-    Layout::VSplit {entity_l:_, entity_r:_, split_pos:_} => 
-      vsplit::layout(view, &component),
+      header_bar::layout(layer, &component),
+      Layout::VSplit {entity_l:_, entity_r:_, split_pos:_} => 
+        vsplit::layout(layer, &component),
   }
 }
 

@@ -1,16 +1,16 @@
-use view::View;
+use view::Layer;
 use entity::core::ComponentContainer;
 use layout::Layout;
 
-pub fn layout(view: &mut View, component: &ComponentContainer) {
+pub fn layout(layer: &mut Layer, component: &ComponentContainer) {
   match component.layout {
     Layout::VSplit {entity_l, entity_r, split_pos} => {
       // Find this component's AABB
-      let view_component_aabb = &mut view.component_aabb;
+      let layer_component_aabb = &mut layer.component_aabb;
       let (c_x, c_y, c_w, c_h);
       {
         let c_aabb 
-          = view_component_aabb.get_component(component.entity_id);
+          = layer_component_aabb.get_component(component.entity_id);
         if c_aabb.is_none() { return; }
         let c_aabb = c_aabb.unwrap();
         c_x = c_aabb.x;
@@ -22,7 +22,7 @@ pub fn layout(view: &mut View, component: &ComponentContainer) {
       {
         // Find left side entity AABB
         let l_id = entity_l;
-        let l_aabb = view_component_aabb.get_component_mut(l_id);
+        let l_aabb = layer_component_aabb.get_component_mut(l_id);
         if l_aabb.is_none() { return; }
         let l_aabb = l_aabb.unwrap();
         // Set left side AABB component values
@@ -35,7 +35,7 @@ pub fn layout(view: &mut View, component: &ComponentContainer) {
       {
         // Find left side entity AABB
         let r_id = entity_r;
-        let r_aabb = view_component_aabb.get_component_mut(r_id);
+        let r_aabb = layer_component_aabb.get_component_mut(r_id);
         if r_aabb.is_none() { return; }
         let r_aabb = r_aabb.unwrap();
         // Set left side AABB component values

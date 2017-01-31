@@ -1,5 +1,5 @@
 use entity::EntityID;
-use view::View;
+use view::Layer;
 use std::ops::{Index, IndexMut};
 use std::slice;
 
@@ -11,17 +11,17 @@ impl EntityTree {
     EntityTree (Vec::new())
   }
 
-  /// Looks at the view's component_container list, and checks whether or not the
+  /// Looks at the layer's component_container list, and checks whether or not the
   /// hierarchy is malformed (is it circular, do some children have more than 1
   /// parent?)
   /// - If malformed, then returns None.
-  /// - If not malformed, then creates a new EntityTree from the view's container
+  /// - If not malformed, then creates a new EntityTree from the layer's container
   /// list.
-  pub fn new_from_view(view: &View) -> Option<EntityTree> {
+  pub fn new_from_layer(layer: &Layer) -> Option<EntityTree> {
     // List of root nodes in the container hierarchy
     let mut tree = EntityTree::new();
-    'outer: for c in &view.component_container {
-      for c2 in &view.component_container {
+    'outer: for c in &layer.component_container {
+      for c2 in &layer.component_container {
         let children = c2.layout.get_children();
         for child in children {
           if child == c.entity_id {
@@ -32,14 +32,14 @@ impl EntityTree {
       tree.push(EntityTreeNode::new(c.entity_id, None));
     }
     let mut containers = Vec::<Option<EntityID>>::with_capacity(
-      view.component_container.len());
-    for c in &view.component_container {
+      layer.component_container.len());
+    for c in &layer.component_container {
       containers.push(Some(c.entity_id));
     }
     for ii in 0..tree.len() {
-      let children = view.component_container
+      let children = layer.component_container
         .get_component(tree[ii].value).unwrap().layout.get_children();
-      let result = tree.fill_children(ii, children, &mut containers, view);
+      let result = tree.fill_children(ii, children, &mut containers, layer);
       if !result {
         return None;
       }
@@ -76,16 +76,16 @@ impl EntityTree {
   /// - node The node to fill with children
   /// - node_children A list of the node's children's entity IDs
   /// - containers A list of containers still left to fill children
-  /// - view The view that node is part of
+  /// - layer The layer that node is part of
   fn fill_children(&mut self,
                    node_index: usize,
                    node_children: Vec<EntityID>,
                    containers: &mut Vec<Option<EntityID>>,
-                   view: & View) -> bool {
+                   layer: & Layer) -> bool {
     // Loop through all the children's entity IDs of this node
     for child in node_children {
-      // Find child container index in the view.
-      let index = view.component_container
+      // Find child container index in the layer.
+      let index = layer.component_container
         .get_component_index(child);
       if index.is_none() { continue; } // Must be a non-container, just ignore it.
       let index = index.unwrap();
@@ -103,11 +103,11 @@ impl EntityTree {
       containers[index] = None;
       // Find this child node's children, and repeat the process by using a
       // recursive call (i.e this function fills the children depth first)
-      let new_node_children = view.component_container.get(index)
+      let new_node_children = layer.component_container.get(index)
         .layout.get_children();
       // Fill the child node's children
       self.fill_children(new_node_index, new_node_children, 
-                    containers, view);
+                    containers, layer);
     }
     // All done, didn't exit badly, return true.
     return true;
