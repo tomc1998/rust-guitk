@@ -53,13 +53,20 @@ pub struct ComponentAnimTranslate {
   pub anim_len: u32,
 
   /// Millisecond timer. Counts up every frame, until it reaches anim_len.
-  anim_timer: u32,
+  pub anim_timer: u32,
 
   /// Tween function
   pub tween_func: TweenFunction,
 }
 impl Component for ComponentAnimTranslate {
   fn get_entity_id(&self) -> EntityID { self.entity_id }
+}
+
+impl ComponentAnimTranslate {
+  /// Returns a tweened f32 value between 0 and 1.
+  pub fn tween(&self) -> f32 {
+    self.tween_func.tween(self.anim_len, self.anim_timer) as f32 / self.anim_len as f32
+  }
 }
 
 

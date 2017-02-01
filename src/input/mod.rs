@@ -132,7 +132,7 @@ pub fn process_input(lib_state: &mut LibState) {
         else {has_scrolled};
     }
     if has_scrolled {
-      curr_view.layout();
+      //curr_view.layout();
     }
   }
 }
