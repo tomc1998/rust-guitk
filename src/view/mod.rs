@@ -1,6 +1,10 @@
 pub mod component_list;
 
-use entity::core::{ComponentContainer, ComponentAABB, ComponentDebugDraw};
+use entity::core::{ComponentContainer, 
+  ComponentAABB, 
+  ComponentDebugDraw, 
+  ComponentTouchScroll, 
+  ComponentTrigger};
 use entity::{Component, EntityID};
 use view::component_list::ComponentList;
 use layout::manager;
@@ -20,6 +24,8 @@ pub struct Layer {
   pub component_debug_draw : ComponentList<ComponentDebugDraw>,
   pub component_aabb : ComponentList<ComponentAABB>,
   pub component_container : ComponentList<ComponentContainer>,
+  pub component_trigger : ComponentList<ComponentTrigger>,
+  pub component_touch_scroll : ComponentList<ComponentTouchScroll>,
   pub component_layer : ComponentList<Layer>,
   /// Optional entity ID association. If this layer has an AABB associated with
   /// it (for GL scissor clipping), then this ID will be Some. Otherwise, None.
@@ -43,6 +49,8 @@ impl Layer {
       component_debug_draw : ComponentList::new(),
       component_container : ComponentList::new(),
       component_aabb : ComponentList::new(),
+      component_trigger : ComponentList::new(),
+      component_touch_scroll : ComponentList::new(),
       component_layer: ComponentList::new(),
       entity_id: None,
     }

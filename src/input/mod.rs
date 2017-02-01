@@ -1,31 +1,57 @@
 use LibState;
 use glium::glutin::{Event, TouchPhase};
+use entity::EntityID;
+use view::View;
 use logger;
 
+mod scroll;
+
 const NUM_POINTS_TRACKED : usize = 128;
+
+/// A position on screen touched by a finger
+#[derive(Clone, Copy)]
+pub struct TouchPoint (f64, f64);
 
 /// Struct holds last few 'frames' of touch data for a given finger
 pub struct FingerTrack {
   finger_id: u64,
-  points: [(f64, f64); NUM_POINTS_TRACKED],
+  start_point: TouchPoint,
+  /// Array of points, last NUM_POINTS_TRACKED sampled positions
+  points: [TouchPoint; NUM_POINTS_TRACKED],
   /// Index into points which indicates the most recently updated point. This
   /// is so that every time we add a point to the list, we don't have to shift
   /// the whole vec back one.
   latest_point: usize,
+
+  /// True if this finger has just been pressed
+  just_down: bool,
+
+  /// ID of the entity this finger is currently dragging
+  curr_dragging: Option<EntityID>,
 }
 
 impl FingerTrack {
-  fn new(finger_id : u64, loc: (f64, f64)) -> FingerTrack {
+  fn new(view: &View, finger_id : u64, loc: (f64, f64)) -> FingerTrack {
+    let mut entity_id = None;
+    for layer in &view.layers {
+      entity_id = scroll::is_on_entity_drag_trigger(layer, 
+                                                    loc.0 as f32, loc.1 as f32);
+      if entity_id.is_some() {
+        break;
+      }
+    }
     let mut track = FingerTrack {
       finger_id: finger_id,
-      points: [(0.0, 0.0); NUM_POINTS_TRACKED],
+      start_point: TouchPoint(loc.0, loc.1),
+      points: [TouchPoint(0.0, 0.0); NUM_POINTS_TRACKED],
       latest_point: 0,
+      just_down: true,
+      curr_dragging: entity_id,
     };
-    track.points[0] = loc;
+    track.points[0] = TouchPoint(loc.0, loc.1);
     return track;
   }
 }
-
 
 pub struct InputState {
   fingers : Vec<FingerTrack>,
@@ -43,6 +69,7 @@ impl InputState {
 /// from Glutin, this function processes the event then continues waiting for
 /// another event.
 pub fn process_input(lib_state: &mut LibState) {
+  'Outer:
   for e in lib_state.display.poll_events() {
     match e {
       Event::Touch(touch) => {
@@ -57,12 +84,12 @@ pub fn process_input(lib_state: &mut LibState) {
         // Parse touch event
         if index.is_none() && touch.phase == TouchPhase::Started {
           // New touch event!
+          logger::log_default("New touch event");
+          let curr_view = lib_state.view_stack.last();
+          if curr_view.is_none() { continue 'Outer; }
+          logger::log_default("Found view to pass it to");
           lib_state.input_state.fingers.push(
-            FingerTrack::new(touch.id, touch.location));
-          logger::log_default(&format!("New touch ID = {} at: {}, {}", 
-                                       touch.id,
-                                       touch.location.0, 
-                                       touch.location.1));
+            FingerTrack::new(curr_view.unwrap(), touch.id, touch.location));
           continue;
         }
         else if index.is_some() {
@@ -75,20 +102,32 @@ pub fn process_input(lib_state: &mut LibState) {
               }
             lib_state.input_state.fingers[index]
               .points[lib_state.input_state.fingers[index].latest_point] 
-              = touch.location;
+              = TouchPoint(touch.location.0, touch.location.1);
           }
           else if touch.phase == TouchPhase::Ended ||
             touch.phase == TouchPhase::Cancelled {
               lib_state.input_state.fingers.remove(index);
-              logger::log_default(&format!("Touch ID {} finished at: {}, {}", 
-                                           touch.id,
-                                           touch.location.0, 
-                                           touch.location.1));
               continue;
             }
         }
       }
       _ => continue,
+    }
+  }
+
+  // Check there is a current view
+  let mut has_scrolled = false;
+  let curr_view = lib_state.view_stack.last_mut();
+  if curr_view.is_some() { 
+    // There is a current view! Process scrolling on this view!
+    let curr_view = curr_view.unwrap();
+    for layer in &mut curr_view.layers {
+      has_scrolled = 
+        if scroll::process_scroll(layer, &lib_state.input_state) {true} 
+        else {has_scrolled};
+    }
+    if has_scrolled {
+      curr_view.layout();
     }
   }
 }
