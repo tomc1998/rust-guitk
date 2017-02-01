@@ -2,7 +2,6 @@ use LibState;
 use glium::glutin::{Event, TouchPhase};
 use entity::EntityID;
 use view::View;
-use logger;
 
 mod scroll;
 
@@ -89,10 +88,8 @@ pub fn process_input(lib_state: &mut LibState) {
         // Parse touch event
         if index.is_none() && touch.phase == TouchPhase::Started {
           // New touch event!
-          logger::log_default("New touch event");
           let curr_view = lib_state.view_stack.last();
           if curr_view.is_none() { continue 'Outer; }
-          logger::log_default("Found view to pass it to");
           lib_state.input_state.fingers.push(
             FingerTrack::new(curr_view.unwrap(), touch.id, touch.location));
           continue;

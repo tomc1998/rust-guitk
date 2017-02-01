@@ -117,6 +117,10 @@ impl<T : Component> ComponentList<T> {
   pub fn push(&mut self, item: T) {
     self.list.push(item)
   }
+
+  pub fn remove(&mut self, index: usize) {
+    self.list.remove(index);
+  }
 }
 
 /// Implement the IntoIterator for ComponentList ref, lets us iterate over the list

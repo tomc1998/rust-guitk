@@ -95,7 +95,6 @@ impl<'a> LibState<'a> {
     input::process_input(self);
     animation::process_animations(self);
     self.view_stack.last_mut().unwrap().layout();
-    logger::log_default("Rendering");
     self.render();
   }
 
