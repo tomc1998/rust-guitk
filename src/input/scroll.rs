@@ -24,9 +24,10 @@ fn get_entity_trigger(layer: &Layer,
   return Some((tx, ty, tw, th));
 }
 
-/// Tests if the given position is on an entity's drag trigger
+/// Tests if the given position is on an entity's drag trigger.
+/// Returns the entity ID of the entity touched, and the offset of the touch.
 pub fn is_on_entity_drag_trigger(layer: &Layer, 
-                                 x: f32, y: f32) -> Option<EntityID> {
+                                 x: f32, y: f32) -> Option<(EntityID, (f32, f32))> {
   logger::log_default("Testing if entity is on a drag trigger...");
   for scroll in &layer.component_touch_scroll {
     let e_id = scroll.entity_id;
@@ -41,7 +42,11 @@ pub fn is_on_entity_drag_trigger(layer: &Layer,
                                  tx, ty, tw, th, x, y));
     if tx < x && tx + tw > x && ty < y && ty + th > y {
       logger::log_default("Is touching!");
-      return Some(e_id);
+      // Get AABB
+      let aabb = layer.component_aabb.get_component(e_id);
+      if aabb.is_none() { continue; }
+      let aabb = aabb.unwrap();
+      return Some((e_id, (x - aabb.x, y - aabb.y)));
     }
   }
 
@@ -59,41 +64,64 @@ pub fn process_scroll(layer: &mut Layer, input_state: &InputState) -> bool {
   let mut has_scrolled = false;
   // Loop through current touches, is it dragging something?
   for touch in &input_state.fingers {
-    let (curr_touch, last_touch, e_id);
+    let (curr_touch, start_touch, offset, e_id);
     {
-      if touch.curr_dragging.is_none() { continue; }
-      // Find the entity trigger AABB
-      e_id = touch.curr_dragging.unwrap();
-      let mut trigger_box = None;
-      trigger_box = get_entity_trigger(layer, e_id);
-      if trigger_box.is_none() { continue; }
-      let (tx, ty, tw, th) = trigger_box.unwrap();
-      // Find this touch delta
+      if touch.curr_dragging.is_none() || touch.offset.is_none() { continue; }
       // Check if touch is just pressed, if so, skip this touch
       if touch.start_point.0 == touch.points[touch.latest_point].0 && 
         touch.start_point.1 == touch.points[touch.latest_point].1 { continue; }
-      // Else get last touch point and current touch point
+
+      e_id = touch.curr_dragging.unwrap();
+      offset = touch.offset.unwrap();
       curr_touch = touch.points[touch.latest_point];
-      if touch.latest_point == 0 {
-        last_touch = touch.points[touch.points.len() - 1];
-      }
-      else {
-        last_touch = touch.points[touch.latest_point - 1];
-      }
+      start_touch = touch.start_point;
     }
 
-    // Calculate delta
-    let dx = curr_touch.0 - last_touch.0;
-    let dy = curr_touch.1 - last_touch.1;
     // Scroll the entity!
+    // Get the scroll behaviour & max / min
+    let scroll_behaviour;
+    let bounds; // Coord bounds on scrolling
+    {
+      let scroll = layer.component_touch_scroll.get_component(e_id);
+      if scroll.is_none() { continue; }
+      let scroll = scroll.unwrap();
+      scroll_behaviour = scroll.behaviour_flags;
+      bounds = (scroll.min_x, scroll.max_x, scroll.min_y, scroll.max_y);
+    }
+    let (min_x, max_x, min_y, max_y) = bounds;
+
     let mut aabb = None;
     aabb = layer.component_aabb.get_component_mut(e_id);
     if aabb.is_none() { continue; }
     let aabb = aabb.unwrap();
 
-    logger::log_default(&format!("Scrolled {}, {}", dx, dy));
-    aabb.x += dx as f32;
-    aabb.y += dy as f32;
+    use entity::core::scroll_behaviour;
+    // Check if scrolling is locked on an axis...
+    if scroll_behaviour & scroll_behaviour::LOCKED_X == 0 {
+      // Check if scrolling is inverted on X
+      if scroll_behaviour & scroll_behaviour::INVERTED_X > 0 {
+        //aabb.x -= dx as f32; 
+      }
+      else {
+        aabb.x = start_touch.0 as f32 - offset.0 + 
+          (curr_touch.0 - start_touch.0) as f32; }
+      // Now lock AABB scrolling to the max / min values in scroll
+      if aabb.x <= min_x { aabb.x = min_x; }
+      else if aabb.x + aabb.w >= max_x { aabb.x = max_x - aabb.w; }
+    }
+
+    if scroll_behaviour & scroll_behaviour::LOCKED_Y == 0 {
+      // Check if scrolling is inverted on Y
+      if scroll_behaviour & scroll_behaviour::INVERTED_Y > 0 {
+        //aabb.y -= dy as f32; 
+      }
+      else {
+        aabb.y = start_touch.1 as f32 - offset.1 + 
+          (curr_touch.1 - start_touch.1) as f32; }
+      if aabb.y <= min_y { aabb.y = min_y; }
+      else if aabb.y + aabb.h >= max_y { aabb.y = max_y - aabb.h; }
+    }
+
     has_scrolled = true;
   }
 

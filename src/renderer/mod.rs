@@ -82,14 +82,6 @@ impl<'a> Renderer<'a> {
       let aabb = aabb.unwrap();
       let (mut ax, mut ay, aw, ah) = (aabb.x, aabb.y, aabb.w, aabb.h);
 
-      // Offset by scroll if there
-      let scroll = layer.component_touch_scroll.get_component(dd.entity_id);
-      if scroll.is_some() {
-        let scroll = scroll.unwrap();
-        ax += scroll.scroll_x;
-        ay += scroll.scroll_y;
-      }
-
       data.push(Vertex{
         position: [ax, ay], 
         color: [dd.color.r, dd.color.g, dd.color.b, 0.5]});

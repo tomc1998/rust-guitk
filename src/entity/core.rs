@@ -3,7 +3,7 @@ use entity::{EntityID, Component};
 use common::color::RGBf32;
 
 /// Namespace to contain constant bitmasks for ComponentTouchScroll::behaviour_flags.
-mod scroll_behaviour {
+pub mod scroll_behaviour {
   /// Controls whether this entity will 'stick' to its position after the user
   /// raises their finger, or whether it will glide smoothly in the direction
   /// and speed the user left the screen with their finger.
@@ -96,6 +96,14 @@ pub struct ComponentTouchScroll {
 
   /// See scroll_behaviour.
   pub behaviour_flags: u32,
+
+  /// Bounds on scrolling. Make sure the entity size is smaller than these
+  /// bounds as a rect! Max x and max y will be checked based on aabb.x +
+  /// aabb.w.
+  pub max_x: f32,
+  pub min_x: f32,
+  pub max_y: f32,
+  pub min_y: f32,
 }
 impl Component for ComponentTouchScroll {
   fn get_entity_id(&self) -> EntityID { self.entity_id }

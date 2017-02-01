@@ -28,15 +28,23 @@ pub struct FingerTrack {
 
   /// ID of the entity this finger is currently dragging
   curr_dragging: Option<EntityID>,
+
+  /// Offset of the finger from the current dragging entity
+  offset: Option<(f32, f32)>,
 }
 
 impl FingerTrack {
   fn new(view: &View, finger_id : u64, loc: (f64, f64)) -> FingerTrack {
     let mut entity_id = None;
+    let mut offset = None;
     for layer in &view.layers {
-      entity_id = scroll::is_on_entity_drag_trigger(layer, 
+      let result = scroll::is_on_entity_drag_trigger(layer, 
                                                     loc.0 as f32, loc.1 as f32);
-      if entity_id.is_some() {
+      if result.is_some() {
+        let result = result.unwrap();
+        entity_id = Some(result.0);
+        offset = Some(result.1);
+
         break;
       }
     }
@@ -47,6 +55,7 @@ impl FingerTrack {
       latest_point: 0,
       just_down: true,
       curr_dragging: entity_id,
+      offset: offset,
     };
     track.points[0] = TouchPoint(loc.0, loc.1);
     return track;

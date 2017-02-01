@@ -16,16 +16,10 @@ pub fn layout_layer(layer : &mut Layer) {
   // Check that the hierarchy is not malformed
   let tree = entity_tree::EntityTree::new_from_layer(layer);
   if tree.is_none() {
-    logger::log_default("View is malformed");
     return;
   }
-  logger::log_default("View is not malformed.");
   let tree = tree.unwrap();
-  logger::log_default(&format!("There are {} entities in the container tree.", 
-                               tree.len()));
   let roots = tree.get_roots();
-  logger::log_default(&format!("There are {} root entities in the container tree.", 
-                               roots.len()));
   let mut node_queue = Vec::with_capacity(tree.len());
   let mut new_nodes = Vec::new();
   for root in roots {
