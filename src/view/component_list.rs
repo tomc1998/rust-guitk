@@ -114,10 +114,6 @@ impl<T : Component> ComponentList<T> {
     self.list.len()
   }
 
-  pub fn push(&mut self, item: T) {
-    self.list.push(item)
-  }
-
   pub fn remove(&mut self, index: usize) {
     self.list.remove(index);
   }

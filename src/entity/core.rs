@@ -1,5 +1,6 @@
 use layout::Layout;
 use entity::{EntityID, Component};
+use entity::animation::TweenFunction;
 use common::color::RGBf32;
 
 /// Namespace to contain constant bitmasks for ComponentTouchScroll::behaviour_flags.
@@ -106,6 +107,30 @@ pub struct ComponentTouchScroll {
   pub min_y: f32,
 }
 impl Component for ComponentTouchScroll {
+  fn get_entity_id(&self) -> EntityID { self.entity_id }
+}
+
+/// Component to snap an entity to certain intervals depending on the entity's
+/// position. Called when the scrolling finger is released from the entity.
+/// Make sure none of the snapped positions conflict with ComponentTouchScroll
+/// min/max values, or you can get entity jerking.
+/// Dependencies: 
+/// ComponentTouchScroll
+/// ComponentAABB
+#[derive(Clone)]
+pub struct ComponentScrollSnap {
+  pub entity_id: EntityID,
+
+  /// List of 2D positions this component can snap to
+  pub snap_positions: Vec<(f32, f32)>,
+
+  /// The tween function to use for the snapping animation
+  pub tween_func: TweenFunction,
+
+  /// Length of snap tween in millis
+  pub tween_len: u32,
+}
+impl Component for ComponentScrollSnap {
   fn get_entity_id(&self) -> EntityID { self.entity_id }
 }
 

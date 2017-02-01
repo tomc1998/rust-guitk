@@ -1,7 +1,11 @@
 use LibState;
 use glium::glutin::{Event, TouchPhase};
 use entity::EntityID;
-use view::View;
+use entity::core::ComponentScrollSnap;
+use entity::animation::ComponentAnimTranslate;
+use view::{View, Layer};
+use common::vec;
+use std;
 
 mod scroll;
 
@@ -108,7 +112,73 @@ pub fn process_input(lib_state: &mut LibState) {
           }
           else if touch.phase == TouchPhase::Ended ||
             touch.phase == TouchPhase::Cancelled {
-              lib_state.input_state.fingers.remove(index);
+              // Before removing, execute any ComponentScrollSnap behaviour
+              let finger = lib_state.input_state.fingers.remove(index);
+              if finger.curr_dragging.is_some() {
+                let e_id = finger.curr_dragging.unwrap();
+                let curr_view = lib_state.view_stack.last_mut();
+                if curr_view.is_none() { continue 'Outer; }
+                let curr_view = curr_view.unwrap();
+
+                // Create a recursive function to search through all layers
+                fn find_snap_in_layer(layer: &mut Layer, 
+                                      e_id: EntityID) -> Option<(&mut Layer, ComponentScrollSnap)> {
+                  let mut snap : Option<ComponentScrollSnap> = None;
+                  {
+                    let snap_opt = layer.component_scroll_snap.get_component(e_id);
+                    if snap_opt.is_some() { 
+                      snap = Some(snap_opt.unwrap().clone());
+                    }
+                  }
+                  if snap.is_some() {
+                    return Some((layer, snap.unwrap())); 
+                  }
+                  for l in &mut layer.component_layer {
+                    let snap = find_snap_in_layer(l, e_id);
+                    if snap.is_some() { return snap; }
+                  }
+                  return None;
+                }
+
+                let mut snap = None;
+                // Call find_snap_in_layer for each layer in this view
+                for l in &mut curr_view.layers {
+                  snap = find_snap_in_layer(l, e_id);
+                  if snap.is_some() { break; }
+                }
+                if snap.is_none() { continue 'Outer; }
+                let snap = snap.unwrap();
+                let layer = snap.0; // Get the layer we found the snap component on
+                let snap = snap.1; // Get the snap component
+
+                // Find AABB
+                let aabb = layer.component_aabb.get_component(e_id);
+                if aabb.is_none() { continue 'Outer; }
+                let aabb = aabb.unwrap();
+
+                // Find the closest snap point
+                let mut closest = None;
+                let mut shortest = std::f32::MAX;
+                for pos in &snap.snap_positions {
+                  let dis = vec::sq_distance(*pos, (aabb.x, aabb.y));
+                  if closest.is_none() || shortest > dis {
+                    closest = Some(pos);
+                    shortest = dis;
+                  }
+                }
+                if closest.is_none() { continue 'Outer; }
+                let closest = closest.unwrap();
+
+                // Add a snap animation
+                layer.component_anim_translate.add_component(
+                  ComponentAnimTranslate {
+                    entity_id: e_id,
+                    start_x: aabb.x, start_y: aabb.y,
+                    end_x: closest.0, end_y: closest.1,
+                    anim_len: snap.tween_len,
+                    anim_timer: 0,
+                    tween_func: snap.tween_func, });
+              }
               continue;
             }
         }

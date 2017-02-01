@@ -24,6 +24,7 @@ pub struct Layer {
   pub component_trigger : ComponentList<ComponentTrigger>,
   pub component_touch_scroll : ComponentList<ComponentTouchScroll>,
   pub component_anim_translate : ComponentList<ComponentAnimTranslate>,
+  pub component_scroll_snap : ComponentList<ComponentScrollSnap>,
   pub component_layer : ComponentList<Layer>,
   /// Optional entity ID association. If this layer has an AABB associated with
   /// it (for GL scissor clipping), then this ID will be Some. Otherwise, None.
@@ -50,6 +51,7 @@ impl Layer {
       component_trigger : ComponentList::new(),
       component_touch_scroll : ComponentList::new(),
       component_anim_translate : ComponentList::new(),
+      component_scroll_snap : ComponentList::new(),
       component_layer: ComponentList::new(),
       entity_id: None,
     }
