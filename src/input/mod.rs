@@ -23,9 +23,6 @@ pub struct FingerTrack {
   /// the whole vec back one.
   latest_point: usize,
 
-  /// True if this finger has just been pressed
-  just_down: bool,
-
   /// ID of the entity this finger is currently dragging
   curr_dragging: Option<EntityID>,
 
@@ -53,7 +50,6 @@ impl FingerTrack {
       start_point: TouchPoint(loc.0, loc.1),
       points: [TouchPoint(0.0, 0.0); NUM_POINTS_TRACKED],
       latest_point: 0,
-      just_down: true,
       curr_dragging: entity_id,
       offset: offset,
     };

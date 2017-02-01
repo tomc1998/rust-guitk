@@ -7,7 +7,11 @@ use std::cmp::PartialEq;
 use layout::Layout;
 use view::Layer;
 
+/// Module containing all the core components for entities
 pub mod core;
+
+/// Module contatining all the components relating to animation
+pub mod animation;
 
 #[derive(Copy, Clone, PartialOrd)]
 pub struct EntityID (pub u16);

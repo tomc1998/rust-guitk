@@ -80,7 +80,7 @@ impl<'a> Renderer<'a> {
       if aabb.is_none() { continue; }
       // Found a matching AABB component, we can draw!
       let aabb = aabb.unwrap();
-      let (mut ax, mut ay, aw, ah) = (aabb.x, aabb.y, aabb.w, aabb.h);
+      let (ax, ay, aw, ah) = (aabb.x, aabb.y, aabb.w, aabb.h);
 
       data.push(Vertex{
         position: [ax, ay], 

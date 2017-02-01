@@ -1,7 +1,7 @@
-use view::{View, Layer};
-use input::{InputState, TouchPoint};
+use view::Layer;
+use input::InputState;
 use entity::EntityID;
-use entity::core::{ComponentTrigger};
+use entity::core::ComponentTrigger;
 use logger;
 
 
@@ -13,7 +13,7 @@ fn get_entity_trigger(layer: &Layer,
   let t : Option<&ComponentTrigger> = layer.component_trigger.get_component(e_id);
   if t.is_none() { return None; }
   let t = t.unwrap();
-  let (mut tx, mut ty, mut tw, mut th) = (t.x, t.y, t.w, t.h); // Trigger box
+  let (mut tx, mut ty, tw, th) = (t.x, t.y, t.w, t.h); // Trigger box
   if t.relative {
     let aabb = layer.component_aabb.get_component(e_id);
     if aabb.is_none() { return None; }
@@ -90,8 +90,7 @@ pub fn process_scroll(layer: &mut Layer, input_state: &InputState) -> bool {
     }
     let (min_x, max_x, min_y, max_y) = bounds;
 
-    let mut aabb = None;
-    aabb = layer.component_aabb.get_component_mut(e_id);
+    let aabb = layer.component_aabb.get_component_mut(e_id);
     if aabb.is_none() { continue; }
     let aabb = aabb.unwrap();
 

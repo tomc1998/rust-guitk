@@ -1,7 +1,6 @@
 use view::Layer;
 use entity::core::ComponentContainer;
 use layout::Layout;
-use logger;
 
 /// Module is used to manipulate container entities as if they were in a tree.
 /// Contains functions to create the tree, and check whether the list of

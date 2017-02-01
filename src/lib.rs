@@ -1,6 +1,7 @@
 extern crate android_glue;
 extern crate ffi_glue;
 extern crate libc;
+extern crate time;
 #[macro_use]
 extern crate glium;
 
@@ -24,6 +25,10 @@ pub mod entity;
 /// A module which defines ways in which to layout entities.
 pub mod layout;
 
+/// Animation system module. Applies animations.
+mod animation;
+
+/// Input system module. Listens for input and modifies state accordingly.
 mod input;
 
 /// A struct which contains all the state needed by the library to function -
@@ -40,12 +45,18 @@ pub struct LibState<'a> {
 
   /// Input state, used by the input system to track fingers
   input_state: input::InputState,
+
+  /// System time of the last update in nanoseconds. Performance counter time,
+  /// NOT time since UNIX epoch! Don't use for current human time!
+  last_update_nanos: u64,
+  /// Library update delta in nanoseconds
+  frame_delta: u64,
 }
 
 /// Initialise guitk. Creates an OpenGL context.
 pub fn init<'a>() -> Option<LibState<'a>> {
   use glium::DisplayBuild;
-  let mut lib_state = LibState{
+  let mut lib_state = LibState {
     display: glium::glutin::WindowBuilder::new()
       .with_gl(glium::glutin::GlRequest::Specific(
           glium::glutin::Api::OpenGlEs, (2, 0)))
@@ -53,6 +64,8 @@ pub fn init<'a>() -> Option<LibState<'a>> {
     renderer: None,
     view_stack: Vec::new(),
     input_state: input::InputState::new(),
+    last_update_nanos: time::precise_time_ns(),
+    frame_delta: 0,
   };
   // Get width / height of window
   {
@@ -78,8 +91,17 @@ pub fn init<'a>() -> Option<LibState<'a>> {
 impl<'a> LibState<'a> {
   /// Update the engine. Call this in your program loop.
   pub fn update(&mut self) {
-    self.render();
+    self.update_delta();
     input::process_input(self);
+    animation::process_animations(self);
+    self.render();
+  }
+
+  /// Update the counter time and delta in LibState.
+  fn update_delta(&mut self) {
+    let now = time::precise_time_ns();
+    self.frame_delta = now - self.last_update_nanos;
+    self.last_update_nanos = now;
   }
 
   /// Renders the view at the top of the view stack
