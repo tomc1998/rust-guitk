@@ -22,9 +22,19 @@ impl TweenFunction {
     match *self {
       TweenFunction::Instant => anim_len,
       TweenFunction::Linear => anim_timer,
-      _ => {
-        unimplemented!();
+      TweenFunction::EaseIn => {
+        let x = anim_timer as f32 / anim_len as f32;
+        (anim_len as f32 * x.powi(2)) as u32
       }
+      TweenFunction::EaseOut => {
+        let x = anim_timer as f32 / anim_len as f32;
+        (anim_len as f32 * (-(x-1.0).powi(2) + 1.0)) as u32
+      },
+      TweenFunction::EaseInOut => {
+        let x = anim_timer as f32 / anim_len as f32;
+        // Smootherstep
+        (anim_len as f32 * (6.0*x.powi(5) - 15.0*x.powi(4) + 10.0*x.powi(3))) as u32
+      },
     }
   }
 }
