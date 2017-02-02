@@ -99,7 +99,8 @@ pub fn process_scroll(layer: &mut Layer, input_state: &InputState) -> bool {
     if scroll_behaviour & scroll_behaviour::LOCKED_X == 0 {
       // Check if scrolling is inverted on X
       if scroll_behaviour & scroll_behaviour::INVERTED_X > 0 {
-        //aabb.x -= dx as f32; 
+        aabb.x = start_touch.0 as f32 - offset.0 -
+          (curr_touch.0 - start_touch.0) as f32;
       }
       else {
         aabb.x = start_touch.0 as f32 - offset.0 + 
@@ -112,7 +113,8 @@ pub fn process_scroll(layer: &mut Layer, input_state: &InputState) -> bool {
     if scroll_behaviour & scroll_behaviour::LOCKED_Y == 0 {
       // Check if scrolling is inverted on Y
       if scroll_behaviour & scroll_behaviour::INVERTED_Y > 0 {
-        //aabb.y -= dy as f32; 
+        aabb.y = start_touch.1 as f32 - offset.1 -
+          (curr_touch.1 - start_touch.1) as f32;
       }
       else {
         aabb.y = start_touch.1 as f32 - offset.1 + 
