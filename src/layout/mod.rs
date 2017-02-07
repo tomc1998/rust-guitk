@@ -34,6 +34,12 @@ pub enum Layout {
     /// entity_l.
     split_pos : f32,
   },
+
+  /// Vertical list (list items stack vertically).
+  VList {
+    entity_list: Vec<EntityID>,
+    item_height: f32,
+  },
 }
 
 impl Layout {
@@ -46,6 +52,8 @@ impl Layout {
       // Vertical split
       Layout::VSplit {entity_l, entity_r, split_pos: _} => 
         vec![entity_l, entity_r],
+      Layout::VList {ref entity_list, item_height: _} => 
+        entity_list.clone(),
       //_ => {
       //  // If we get here, then we haven't implemented get_children for all the
       //  // layout types yet.

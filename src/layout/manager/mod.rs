@@ -9,6 +9,7 @@ mod entity_tree;
 
 mod header_bar;
 mod vsplit;
+mod vlist;
 
 /// Layout a view layer.
 pub fn layout_layer(layer : &mut Layer) {
@@ -63,10 +64,15 @@ pub fn layout_layer(layer : &mut Layer) {
 
 fn layout_component(layer: &mut Layer, component: ComponentContainer) {
   match component.layout {
-    Layout::HeaderBar {entity_header:_, entity_body:_, header_height:_} => 
-      header_bar::layout(layer, &component),
-      Layout::VSplit {entity_l:_, entity_r:_, split_pos:_} => 
-        vsplit::layout(layer, &component),
+    Layout::HeaderBar {entity_header:_, entity_body:_, header_height:_} => {
+      header_bar::layout(layer, &component)
+    }
+    Layout::VSplit {entity_l:_, entity_r:_, split_pos:_} => {
+      vsplit::layout(layer, &component)
+    }
+    Layout::VList {entity_list:_, item_height:_} => {
+      vlist::layout(layer, &component);
+    }
   }
 }
 

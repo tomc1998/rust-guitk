@@ -107,10 +107,12 @@ impl<'a> LibState<'a> {
 
   /// Renders the view at the top of the view stack
   fn render(&self) {
+    use glium::Surface;
     let view = self.view_stack.last();
     if view.is_some() {
       let view = view.unwrap();
       let mut target = self.display.draw();
+      target.clear_color(0.1, 0.1, 0.1, 1.0);
       for layer in &view.layers {
         self.renderer.as_ref().unwrap().render(self, &mut target, layer, None);
       }

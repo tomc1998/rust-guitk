@@ -107,7 +107,9 @@ impl<'a> Renderer<'a> {
 
     // Apply scissor to draw params
     let mut draw_params = glium::draw_parameters::DrawParameters::default();
-    draw_params.scissor = scissor_rect;
+    draw_params.viewport = scissor_rect;
+    //draw_params.scissor = scissor_rect;
+    draw_params.blend = glium::draw_parameters::Blend::alpha_blending();
 
     target.draw(&vbo, 
                 indices, &self.program,
@@ -120,12 +122,21 @@ impl<'a> Renderer<'a> {
       let aabb = layer.component_aabb.get_component(l.entity_id.unwrap());
       if aabb.is_none() { continue; }
       let aabb = aabb.unwrap();
+      let rect;
+      if scissor_rect.is_none() {
+        rect = glium::Rect{left: 0, bottom: 0, width: self.view_w, height: self.view_h};
+      }
+      else {
+        rect = scissor_rect.unwrap();
+      }
+      let w_scale = rect.width as f32 / self.view_w as f32;
+      let h_scale = rect.height as f32 / self.view_h as f32;
       // Render nested layer with the correct scissor params
       self.render(lib_state, target, l, Some(glium::Rect {
-        left: aabb.x as u32,
-        bottom: aabb.x as u32,
-        width: aabb.w as u32,
-        height: aabb.h as u32,
+        left: (aabb.x * w_scale) as u32 + rect.left,
+        bottom: rect.bottom + (rect.height as f32 - (aabb.y + aabb.h) * h_scale) as u32,
+        width: (aabb.w * w_scale) as u32,
+        height: (aabb.h * h_scale) as u32,
       }));
     }
   }
